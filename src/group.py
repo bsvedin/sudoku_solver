@@ -28,16 +28,11 @@ class Group:
     def update_possible_values(self) -> None:
         if self.solved:
             return
-        values_in_group = []
-        for entry in self.entries:
-            if entry.value is not None:
-                values_in_group.append(entry.value)
+        values_in_group = [entry.value for entry in self.entries if entry.value]
         for entry in self.entries:
             entry.remove_impossible_values(values_in_group)
 
-    def _check_for_duplicate_possible_values(self):
-        if self.solved:
-            return
+    def _check_for_naked_twin_possible_values(self):
         entry_possible_value_sets_in_group = []
         for entry in self.entries:
             if entry.value is None:
@@ -56,14 +51,12 @@ class Group:
                 seen[values] = 1
         for duplicate in duplicates.keys():
             duplicate = tuple(duplicate)
-            if seen[duplicate] == len(duplicate):  # This checks if the length is e.g. 3 that 3 entries in the
-                # group share the possibilities
+            if seen[duplicate] == len(duplicate):
+                # This checks if the length is e.g. 3 that 3 entries in the group share the possibilities
                 for entry in self.entries:
-                    entry.remove_impossible_values_duplicate(duplicate)
+                    entry.remove_impossible_values_from_naked_twins(duplicate)
 
     def _check_entries_for_unique_possible_values(self) -> None:
-        if self.solved:
-            return
         # self.update_possible_values()
         # Now check if there is a unique possible value for the entry
         all_possible_values = []
@@ -107,11 +100,46 @@ class Group:
                             all_possible_exclusives_in_group[value].append(entry.possible_values[GroupType.SquareExclusive][value])
                         else:
                             all_possible_exclusives_in_group[value] = [entry.possible_values[GroupType.SquareExclusive][value]]
-                        # all_possible_exclusives_in_group[value] = entry.possible_values[GroupType.SquareExclusive][value]
-                        # all_possible_exclusives_in_group.extend(entry.possible_values[GroupType.All])
             if all_possible_exclusives_in_group:
                 for entry in self.entries:
                     entry.remove_impossible_values_exclusive_to_other_square(all_possible_exclusives_in_group)
+
+    def _check_for_hidden_twins(self):
+        # First check all the possible values and how many times they are seen and where they were seen
+        all_possible_values_in_group = {}
+        for index, entry in enumerate(self.entries):
+            for value in entry.possible_values[GroupType.All]:
+                if value in all_possible_values_in_group:
+                    all_possible_values_in_group[value]['seen'] += 1
+                    all_possible_values_in_group[value]['where'].append(index)
+                else:
+                    all_possible_values_in_group[value] = {}
+                    all_possible_values_in_group[value]['seen'] = 1
+                    all_possible_values_in_group[value]['where'] = [index]
+        # Check if any of them are only seen twice
+        possible_hidden_pair_values = []
+        possible_hidden_pair_positions = []
+        for value in all_possible_values_in_group:
+            if all_possible_values_in_group[value]['seen'] == 2:
+                possible_hidden_pair_values.append(value)
+                possible_hidden_pair_positions.append(all_possible_values_in_group[value]['where'])
+        hidden_pairs = []
+        for first_value, positions in zip(possible_hidden_pair_values, possible_hidden_pair_positions):
+            if possible_hidden_pair_positions.count(positions) == 2:
+                for second_value, second_positions in zip(possible_hidden_pair_values, possible_hidden_pair_positions):
+                    if second_positions == positions and first_value != second_value:
+                        pair = [first_value, second_value]
+                        pair.sort()
+                        hidden_pairs.append(tuple(pair))
+        if hidden_pairs:
+            hidden_pairs = list(set(hidden_pairs))
+            for hidden_pair in hidden_pairs:
+                for entry in self.entries:
+                    entry.remove_impossible_values_from_hidden_twins(hidden_pair)
+
+    def _check_for_naked_chains(self):
+        # IMPLEMENT ME!
+        pass
 
     def _check_if_solved(self):
         if self.solved:
@@ -127,8 +155,9 @@ class Group:
         if self.solved:
             return
         self.update_possible_values()
-        self._check_for_duplicate_possible_values()
+        self._check_for_naked_twin_possible_values()
         self._check_entries_for_unique_possible_values()
         self._check_group_for_unique_possibilities_in_other_groups()
+        self._check_for_hidden_twins()
         self.update_possible_values()
         self._check_if_solved()

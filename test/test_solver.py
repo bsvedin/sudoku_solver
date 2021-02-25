@@ -1,6 +1,7 @@
-# Copyright Bryant Svedin (c) 17 Feb 2021.
+# Copyright Bryant Svedin (c) 24 Feb 2021.
 
 import unittest
+from pathlib import Path
 
 from solver import Solver
 
@@ -108,6 +109,51 @@ class MyTestCase(unittest.TestCase):
                     [7, 4, 6, 1, 8, 9, 2, 3, 5]
                     ]
         self.assertEqual(solution, solve(entries))
+
+    def test_hardest_puzzle(self):
+        # Hardest puzzle according to a stack exchange I found
+        entries = [[8, 0, 0, 0, 0, 0, 0, 0, 0],
+                   [0, 0, 3, 6, 0, 0, 0, 0, 0],
+                   [0, 7, 0, 0, 9, 0, 2, 0, 0],
+                   [0, 5, 0, 0, 0, 7, 0, 0, 0],
+                   [0, 0, 0, 0, 4, 5, 7, 0, 0],
+                   [0, 0, 0, 1, 0, 0, 0, 3, 0],
+                   [0, 0, 1, 0, 0, 0, 0, 6, 8],
+                   [0, 0, 8, 5, 0, 0, 0, 1, 0],
+                   [0, 9, 0, 0, 0, 0, 4, 0, 0]]
+
+        solution = [[8, 1, 2, 7, 5, 3, 6, 4, 9],
+                    [9, 4, 3, 6, 8, 2, 1, 7, 5],
+                    [6, 7, 5, 4, 9, 1, 2, 8, 3],
+                    [1, 5, 4, 2, 3, 7, 8, 9, 6],
+                    [3, 6, 9, 8, 4, 5, 7, 2, 1],
+                    [2, 8, 7, 1, 6, 9, 5, 3, 4],
+                    [5, 2, 1, 9, 7, 4, 3, 6, 8],
+                    [4, 3, 8, 5, 2, 6, 9, 1, 7],
+                    [7, 9, 6, 3, 1, 8, 4, 5, 2]
+                    ]
+        self.assertEqual(solution, solve(entries))
+
+    def test_boards(self):
+        boards_text = Path('../boards.txt').read_text()
+        boards = [board for board in boards_text.splitlines() if not board.startswith('#') and board]
+        number_solved = 0
+        number_tried = 0
+        for board in boards:
+            entries = []
+            while board:
+                row, board = board[:9], board[9:]
+                row = [int(val) for val in row]
+                entries.append(row)
+            solver = Solver(entries)
+            try:
+                number_tried += 1
+                solver.solve()
+                number_solved += 1
+            except:
+                pass
+            print(solver.get_solution())
+        print('Number Solved = ' + str(number_solved) + '/' + str(number_tried))
 
 
 if __name__ == '__main__':

@@ -49,7 +49,7 @@ class Entry:
         for value_in_group in values_in_group:
             self._remove_impossible_value(value_in_group)
 
-    def remove_impossible_values_duplicate(self, impossible_values: List[int]):
+    def remove_impossible_values_from_naked_twins(self, impossible_values: List[int]):
         # The "impossible values duplicates" come from other entries in the group that have a small number of possible values that is identical with another entry
         # e.g. two different entries have possible values of [2, 3] and this entry is [2, 3, 4]
         # Therefore this entry must be 4 because the other two have to be 2 or 3
@@ -67,6 +67,16 @@ class Entry:
                 exclusive_square = all_possible_exclusives_in_group[value]
                 if len(exclusive_square) > 1 and len(set(exclusive_square)) == 1 and exclusive_square[0] != self.square:
                     # Then it occurs at least twice all in the same square that is not this square
+                    self._remove_impossible_value(value)
+
+    def remove_impossible_values_from_hidden_twins(self, hidden_pair):
+        if self.value:
+            return
+        if hidden_pair[0] in self.possible_values[GroupType.All] and hidden_pair[1] in self.possible_values[GroupType.All]:
+            for value in self.possible_values[GroupType.All]:
+                if value in hidden_pair:
+                    continue
+                else:
                     self._remove_impossible_value(value)
 
     def _remove_impossible_value(self, value):

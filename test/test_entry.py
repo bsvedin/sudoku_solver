@@ -80,7 +80,7 @@ class TestEntry(unittest.TestCase):
         # And the group duplicates have been counted
         impossible_values = [4]
         # When The entry removes the impossible values and there is only only possibility left
-        entry.remove_impossible_values_duplicate(impossible_values)
+        entry.remove_impossible_values_from_naked_twins(impossible_values)
         # Then the possible values are [2, 7]
         self.assertEqual(entry.possible_values[GroupType.All], [2, 7])
         self.assertEqual(entry.value, None)
@@ -94,7 +94,7 @@ class TestEntry(unittest.TestCase):
         # And the group duplicates have been counted
         impossible_values = [2, 4]
         # When The entry removes the impossible values and there is only only possibility left
-        entry.remove_impossible_values_duplicate(impossible_values)
+        entry.remove_impossible_values_from_naked_twins(impossible_values)
         # Then the value is set to 7
         # self.assertEqual(entry.possible_values[GroupType.All], [2, 4])
         self.assertEqual(entry.value, 7)
